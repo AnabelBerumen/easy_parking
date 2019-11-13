@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_parking/api/auth_api.dart';
+import 'package:easy_parking/utils/responsive.dart';
 import '../widgets/circle.dart';
 import '../widgets/input_text.dart';
-import '../api/auth_api.dart';
-import '../utils/responsive.dart';
 
-class LoginPage extends StatefulWidget {
+class SingUpPage extends StatefulWidget {
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _SingUpPageState createState() => _SingUpPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SingUpPageState extends State<SingUpPage> {
   final _formKey = GlobalKey<FormState>();
   final _authAPI = AuthAPI();
-  var _email = '', _password = '';
+
+  var _username = '', _email = '', _password = '';
   var _isFetching = false;
 
   @override
@@ -25,22 +26,20 @@ class _LoginPageState extends State<LoginPage> {
 
   _submit() async {
     if (_isFetching) return;
-
     final isValid = _formKey.currentState.validate();
-
     if (isValid) {
       setState(() {
         _isFetching = true;
       });
-      final isOk =
-      await _authAPI.login(context, email: _email, password: _password);
+      final isOk = await _authAPI.register(context,
+          username: _username, email: _email, password: _password);
 
       setState(() {
         _isFetching = false;
       });
 
       if (isOk) {
-        print("LOGIN OK");
+        print("REGISTER");
         Navigator.pushNamedAndRemoveUntil(context, 'splash', (_) => false);
       }
     }
@@ -49,6 +48,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+
     final responsive = Responsive(context);
 
     return Scaffold(
@@ -96,16 +96,15 @@ class _LoginPageState extends State<LoginPage> {
                                   borderRadius: BorderRadius.circular(15),
                                   boxShadow: [
                                     BoxShadow(
-                                        color: Colors.black26, blurRadius: 35)
+                                        color: Colors.black26, blurRadius: 25)
                                   ]),
                             ),
-                            SizedBox(height: responsive.hp(4)),
+                            SizedBox(height: responsive.hp(3)),
                             Text(
-                              "Bienvenido\nde nuevo.",
+                              "Hello again.\nWelcome back",
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  fontSize: responsive.ip(2),
-                                  fontWeight: FontWeight.w300),
+                                  fontSize: responsive.ip(1.9), fontWeight: FontWeight.w300),
                             )
                           ],
                         ),
@@ -121,9 +120,21 @@ class _LoginPageState extends State<LoginPage> {
                                   child: Column(
                                     children: <Widget>[
                                       InputText(
-                                          label: "EMAIL ADDRESS",
-                                          inputType: TextInputType.emailAddress,
+                                          label: "USERNAME",
                                           fontSize: responsive.ip(1.8),
+                                          validator: (String text) {
+                                            if (RegExp(r'^[a-zA-Z0-9]+$')
+                                                .hasMatch(text)) {
+                                              _username = text;
+                                              return null;
+                                            }
+                                            return "Invalid Username";
+                                          }),
+                                      SizedBox(height: responsive.hp(1.5)),
+                                      InputText(
+                                          label: "EMAIL ADDRESS",
+                                          fontSize: responsive.ip(1.8),
+                                          inputType: TextInputType.emailAddress,
                                           validator: (String text) {
                                             if (text.contains("@")) {
                                               _email = text;
@@ -131,11 +142,11 @@ class _LoginPageState extends State<LoginPage> {
                                             }
                                             return "Invalid Email";
                                           }),
-                                      SizedBox(height: responsive.hp(3)),
+                                      SizedBox(height: responsive.hp(1.5)),
                                       InputText(
                                         label: "PASSWORD",
-                                        isSecure: true,
                                         fontSize: responsive.ip(1.8),
+                                        isSecure: true,
                                         validator: (String text) {
                                           if (text.isNotEmpty &&
                                               text.length > 5) {
@@ -148,44 +159,38 @@ class _LoginPageState extends State<LoginPage> {
                                     ],
                                   )),
                             ),
-                            SizedBox(height: responsive.hp(4)),
+                            SizedBox(height: responsive.ip(5)),
                             ConstrainedBox(
                               constraints: BoxConstraints(
                                 maxWidth: 350,
                                 minWidth: 350,
                               ),
                               child: CupertinoButton(
-                                padding: EdgeInsets.symmetric(
-                                    vertical: responsive.ip(2)),
+                                padding: EdgeInsets.symmetric(vertical: responsive.ip(1.9)),
                                 color: Colors.lightBlue,
                                 borderRadius: BorderRadius.circular(4),
                                 onPressed: () => _submit(),
-                                child: Text("Sign in",
-                                    style: TextStyle(
-                                        fontSize: responsive.ip(2.5))),
+                                child: Text("Sign Up",
+                                    style: TextStyle(fontSize: responsive.ip(1.9))),
                               ),
                             ),
                             SizedBox(height: responsive.hp(2)),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: <Widget>[
-                                Text("New to Friendly Desi?",
+                                Text("Already have an account?",
                                     style: TextStyle(
-                                        fontSize: responsive.ip(1.8),
-                                        color: Colors.black54)),
+                                        fontSize: responsive.ip(1.7), color: Colors.black54)),
                                 CupertinoButton(
-                                  onPressed: () =>
-                                      Navigator.pushNamed(context, "singup"),
-                                  child: Text("Sign Up",
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text("Sign In",
                                       style: TextStyle(
-                                          fontSize: responsive.ip(1.8),
+                                          fontSize: responsive.ip(1.7),
                                           color: Colors.lightBlue[900])),
                                 )
                               ],
                             ),
-                            SizedBox(
-                              height: responsive.hp(5),
-                            )
+
                           ],
                         )
                       ],
@@ -193,6 +198,24 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
+              Positioned(
+                left: 15,
+                top: 5,
+                child: SafeArea(
+                  child: CupertinoButton(
+                    padding: EdgeInsets.all(10),
+                    borderRadius: BorderRadius.circular(30),
+                    color: Colors.black12,
+                    onPressed: () => Navigator.pop(context),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+
+              // START FETCHING DIALOG
               _isFetching
                   ? Positioned.fill(
                   child: Container(
@@ -202,6 +225,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ))
                   : Container()
+              // END FETCHING DIALOG
+
             ],
           ),
         ),
